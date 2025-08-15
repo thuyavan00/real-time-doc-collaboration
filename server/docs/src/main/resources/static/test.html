@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<body>
+<h3>WS Hello Test</h3>
+<input id="msg" value="Hello from client" />
+<button id="send">Send</button>
+<pre id="log"></pre>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    const log = (m) => document.getElementById('log').textContent += m + '\n';
+
+    const socket = new SockJS('/ws');
+    const stomp  = Stomp.over(socket);
+    stomp.debug = null; // quiet logs
+
+    stomp.connect({}, () => {
+      log('Connected');
+      stomp.subscribe('/topic/hello', (frame) => log('Broadcast: ' + frame.body));
+    });
+
+    document.getElementById('send').onclick = () => {
+      const text = document.getElementById('msg').value;
+      stomp.send('/app/hello', {}, JSON.stringify({ text }));
+    };
+</script>
+</body>
+</html>

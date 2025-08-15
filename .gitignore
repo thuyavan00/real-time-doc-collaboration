@@ -1,0 +1,36 @@
+# Java / Maven
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+target/
+
+# Spring Boot
+spring.log
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE files
+.idea/
+*.iws
+*.ipr
+*.iml
+.vscode/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node (if frontend is added later)
+node_modules/
+dist/
+
+# Environment / Secrets
+.env

@@ -1,0 +1,10 @@
+server:
+  port: 8090
+
+spring:
+  main:
+    banner-mode: "console"
+logging:
+  level:
+    root: INFO
+    org.springframework.web.socket: INFO
