@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<body>
+<h3>Doc WS Test</h3>
+<label>Doc ID: <input id="docId" placeholder="paste-uuid-here"/></label><br><br>
+<textarea id="insertText" rows="4" cols="60">Hello world</textarea><br>
+<button id="connect">Connect</button>
+<button id="send">Send Insert Op</button>
+<pre id="log"></pre>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    const log = (m)=>document.getElementById('log').textContent += m + '\n';
+    let stomp, currentVersion = 0;
+
+    document.getElementById('connect').onclick = () => {
+      const socket = new SockJS('/ws'); stomp = Stomp.over(socket); stomp.debug = null;
+      const docId = document.getElementById('docId').value.trim();
+      if(!docId) return alert('Paste a doc UUID first');
+
+      stomp.connect({}, () => {
+        log('Connected');
+        stomp.subscribe(`/topic/doc/${docId}`, (frame) => {
+          const data = JSON.parse(frame.body);
+          currentVersion = data.newVersion;
+          log('Broadcast: ' + frame.body);
+        });
+        log(`Subscribed to /topic/doc/${docId}`);
+      });
+    };
+
+    document.getElementById('send').onclick = () => {
+      const docId = document.getElementById('docId').value.trim();
+      const txt = document.getElementById('insertText').value;
+      if (!stomp || !stomp.connected) return alert('Connect first');
+
+      const op = {
+        type: "text",
+        ops: [{ action: "insert", text: txt }],
+        baseVersion: currentVersion,    // start at 0, then advance as broadcasts arrive
+        clientId: "manual-test"
+      };
+      stomp.send(`/app/doc/${docId}/op`, {}, JSON.stringify(op));
+      log('Sent op: ' + JSON.stringify(op));
+    };
+</script>
+</body>
+</html>

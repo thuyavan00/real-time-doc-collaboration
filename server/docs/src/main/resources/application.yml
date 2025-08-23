@@ -4,6 +4,23 @@ server:
 spring:
   main:
     banner-mode: "console"
+  datasource:
+    url: jdbc:postgresql://localhost:5432/costory_docs
+    username: postgres
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update   # use migrations later
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+app:
+  snapshotEvery: 1
+
 logging:
   level:
     root: INFO
