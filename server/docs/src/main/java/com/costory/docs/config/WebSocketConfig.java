@@ -13,6 +13,7 @@ import org.springframework.web.socket.config.annotation.*;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompLoggingInterceptor stompLoggingInterceptor;
+    private final ConnectUserInterceptor connectUserInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -30,6 +31,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(stompLoggingInterceptor);
+        registration.interceptors(stompLoggingInterceptor, connectUserInterceptor);
     }
+
+
 }

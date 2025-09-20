@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<body>
+<h3>Doc Presence & Cursor Test</h3>
+<label>Doc ID: <input id="docId" placeholder="paste-uuid-here"/></label>
+<label style="margin-left:8px;">Display: <input id="display" placeholder="Your name"/></label>
+<button id="connect">Connect</button>
+<button id="leave">Leave</button>
+<br/><br/>
+<textarea id="editor" rows="8" cols="80" placeholder="Type here..."></textarea>
+<pre id="log"></pre>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    const log = (m)=>document.getElementById('log').textContent += m + '\n';
+    let stomp, docId, lastCursorAt = 0;
+
+    function connect() {
+      docId = document.getElementById('docId').value.trim();
+      const display = document.getElementById('display').value.trim() || "Guest";
+      if (!docId) return alert('Paste a doc UUID first');
+
+      stomp = Stomp.over(new SockJS('/ws'));
+      stomp.debug = null;
+
+      stomp.connect({}, () => {
+        log('Connected');
+
+        // Presence + cursor subscriptions
+        stomp.subscribe(`/topic/doc/${docId}/presence`, f => log('Presence: ' + f.body));
+        stomp.subscribe(`/topic/doc/${docId}/cursor`, f => log('Cursor: ' + f.body));
+
+        // Join
+        stomp.send(`/app/doc/${docId}/presence`, {}, JSON.stringify({
+          type: "join",
+          display
+        }));
+
+        // Heartbeat ping every 15s
+        setInterval(() => {
+          stomp.send(`/app/doc/${docId}/presence`, {}, JSON.stringify({ type: "ping" }));
+        }, 15000);
+      });
+    }
+
+    function leave() {
+      if (!stomp || !stomp.connected) return;
+      stomp.send(`/app/doc/${docId}/presence`, {}, JSON.stringify({ type: "leave" }));
+      stomp.disconnect(() => log('Disconnected'));
+    }
+
+    document.getElementById('connect').onclick = connect;
+    document.getElementById('leave').onclick = leave;
+
+    // Cursor throttling (max ~20 Hz = every 50ms)
+    document.getElementById('editor').addEventListener('keyup', e => sendCursor());
+    document.getElementById('editor').addEventListener('click', e => sendCursor());
+
+    function sendCursor() {
+      if (!stomp || !stomp.connected) return;
+      const now = performance.now();
+      if (now - lastCursorAt < 50) return;
+      lastCursorAt = now;
+
+      const el = document.getElementById('editor');
+      const pos = el.selectionStart;
+      const selFrom = el.selectionStart;
+      const selTo = el.selectionEnd;
+
+      stomp.send(`/app/doc/${docId}/cursor`, {}, JSON.stringify({
+        pos, selFrom, selTo
+      }));
+    }
+
+    // Best-effort leave on window close
+    window.addEventListener('beforeunload', () => {
+      try { leave(); } catch {}
+    });
+</script>
+</body>
+</html>
