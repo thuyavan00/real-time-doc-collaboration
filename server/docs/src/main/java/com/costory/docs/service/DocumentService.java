@@ -34,9 +34,17 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
+    public List<DocumentResponse> list() {
+        return docRepo.findAllByOrderByUpdatedAtDesc()
+            .stream()
+            .map(doc -> new DocumentResponse(doc.getId(), doc.getTitle(), doc.getVersion(), null, doc.getUpdatedAt()))
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
     public DocumentResponse get(UUID id) {
         var doc = docRepo.findById(id).orElseThrow();
-        return new DocumentResponse(doc.getId(), doc.getTitle(), doc.getVersion(), doc.getContentSnapshot());
+        return new DocumentResponse(doc.getId(), doc.getTitle(), doc.getVersion(), doc.getContentSnapshot(), doc.getUpdatedAt());
     }
 
     /** Accept an op, transform if needed, apply, persist, and return broadcast payload. */

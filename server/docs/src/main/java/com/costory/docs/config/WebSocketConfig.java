@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.*;
-//import com.costory.docs.config.StompLoggingInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -14,13 +13,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompLoggingInterceptor stompLoggingInterceptor;
     private final ConnectUserInterceptor connectUserInterceptor;
+    private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")   // tighten in prod
-                .withSockJS();                   // optional; remove if you only want native WS
+                .setAllowedOriginPatterns("*")
+                .addInterceptors(jwtHandshakeInterceptor)
+                .withSockJS();
     }
 
     @Override

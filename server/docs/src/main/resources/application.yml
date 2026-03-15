@@ -7,10 +7,10 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/costory_docs
     username: postgres
-    password: root
+    password: postgres
   jpa:
     hibernate:
-      ddl-auto: update   # use migrations later
+      ddl-auto: update # use migrations later
     show-sql: true
     properties:
       hibernate.format_sql: true
@@ -20,6 +20,9 @@ spring:
 
 app:
   snapshotEvery: 1
+  jwt:
+    secret: "Y29zdG9yeS1kb2NzLXN1cGVyLXNlY3JldC1rZXktZm9yLWp3dC0yNTZiaXRz"
+    expiry-days: 7
 
 logging:
   level:
