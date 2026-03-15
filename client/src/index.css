@@ -119,6 +119,20 @@ button:disabled {
   color: var(--text-primary);
 }
 
+/* ── Doc Sections ────────────────────────────────── */
+.doc-section {
+  margin-bottom: 2.5rem;
+}
+
+.doc-section-heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.85rem;
+}
+
 /* ── Doc Grid & Card ─────────────────────────────── */
 .doc-grid {
   display: grid;
@@ -190,6 +204,77 @@ button:disabled {
   color: var(--text-muted);
 }
 
+/* ── DocCard rename input ────────────────────────── */
+.doc-card-rename-input {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.4rem;
+  outline: none;
+  width: 100%;
+}
+
+/* ── DocCard actions menu ────────────────────────── */
+.doc-card-actions {
+  position: relative;
+  margin-left: auto;
+}
+
+.doc-card-menu-btn {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+.doc-card:hover .doc-card-menu-btn {
+  opacity: 1;
+}
+.doc-card-menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.doc-card-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  min-width: 130px;
+  z-index: 10;
+  overflow: hidden;
+}
+.doc-card-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.9rem;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  border-radius: 0;
+}
+.doc-card-menu button:hover {
+  background: var(--bg-hover);
+}
+.doc-card-menu button.danger {
+  color: var(--danger);
+}
+.doc-card-menu button.danger:hover {
+  background: rgba(224, 92, 106, 0.1);
+}
+
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -227,6 +312,23 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.doc-toolbar-title:hover {
+  color: var(--accent);
+}
+
+.doc-toolbar-title-input {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  outline: none;
+  flex: 1;
+  min-width: 0;
 }
 
 .toolbar-right {

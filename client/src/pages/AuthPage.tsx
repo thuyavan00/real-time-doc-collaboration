@@ -1,34 +1,30 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login, register } from '../lib/auth'
-import type { AuthUser } from '../lib/auth'
+import { useLoginMutation, useRegisterMutation } from '../store/api'
 
-interface Props {
-  onAuth: (user: AuthUser) => void
-}
-
-export function AuthPage({ onAuth }: Props) {
+export function AuthPage() {
   const navigate = useNavigate()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+
+  const [login, { isLoading: loggingIn }] = useLoginMutation()
+  const [register, { isLoading: registering }] = useRegisterMutation()
+  const loading = loggingIn || registering
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
     try {
-      const user = mode === 'login'
-        ? await login(username, password)
-        : await register(username, password)
-      onAuth(user)
+      if (mode === 'login') {
+        await login({ username, password }).unwrap()
+      } else {
+        await register({ username, password }).unwrap()
+      }
       navigate('/')
     } catch (err: any) {
-      setError(err.message ?? 'Something went wrong')
-    } finally {
-      setLoading(false)
+      setError(err.data?.error ?? err.message ?? 'Something went wrong')
     }
   }
 

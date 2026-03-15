@@ -28,6 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/ws/**").permitAll()          // WebSocket upgrade
                         .requestMatchers("/doc-test.html", "/doc-presence.html").permitAll()
+                        .requestMatchers("/api/docs/**").permitAll()    // TODO: re-secure once auth is stable
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

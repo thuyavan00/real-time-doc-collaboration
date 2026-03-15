@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface DocumentOpRepository extends JpaRepository<DocumentOpEntity, Long> {
     List<DocumentOpEntity> findByDocAndBaseVersionGreaterThanOrderByIdAsc(DocumentEntity doc, long baseVersion);
     long countByDoc(DocumentEntity doc);
+    void deleteByDoc(DocumentEntity doc);
 }

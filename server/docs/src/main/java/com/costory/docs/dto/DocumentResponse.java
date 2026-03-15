@@ -11,4 +11,5 @@ public class DocumentResponse {
     private long version;
     private String content; // snapshot
     private Instant updatedAt;
+    private Instant createdAt;
 }

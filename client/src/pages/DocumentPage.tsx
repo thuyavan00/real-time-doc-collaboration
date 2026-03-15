@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { createStomp } from '../lib/ws'
-import { api } from '../lib/api'
+import { useGetDocQuery, useRenameDocMutation } from '../store/api'
 import { useAuth } from '../main'
 import { PresenceBar } from '../components/PresenceBar'
 import { StatusBar } from '../components/StatusBar'
@@ -58,10 +58,16 @@ export function DocumentPage() {
   const { user } = useAuth()
   const display = user?.username ?? 'Guest'
 
+  const { data: docData } = useGetDocQuery(docId!, { skip: !docId })
+  const [renameDoc] = useRenameDocMutation()
+
   const [connStatus, setConnStatus] = useState<ConnStatus>('disconnected')
   const [roster, setRoster] = useState<RosterUser[]>([])
   const [content, setContent] = useState('')
   const [docTitle, setDocTitle] = useState('')
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [draftTitle, setDraftTitle] = useState('')
+  const titleInputRef = useRef<HTMLInputElement>(null)
 
   const stompRef = useRef<ReturnType<typeof createStomp> | null>(null)
   const version = useRef(0)
@@ -71,18 +77,18 @@ export function DocumentPage() {
   )
   const lastCursor = useRef(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const initialised = useRef(false)
 
-  // Load initial document content
+  // Initialise local content/title from RTK Query result (runs once when data arrives)
   useEffect(() => {
-    if (!docId) return
-    api.getDoc(docId).then(doc => {
-      setDocTitle(doc.title)
-      const c = doc.content ?? ''
-      setContent(c)
-      prevContent.current = c
-      version.current = doc.version
-    })
-  }, [docId])
+    if (!docData || initialised.current) return
+    initialised.current = true
+    setDocTitle(docData.title)
+    const c = docData.content ?? ''
+    setContent(c)
+    prevContent.current = c
+    version.current = docData.version
+  }, [docData])
 
   const connect = () => {
     if (!docId) return
@@ -140,6 +146,7 @@ export function DocumentPage() {
   }
 
   useEffect(() => {
+    connect()
     const onUnload = () => disconnect()
     window.addEventListener('beforeunload', onUnload)
     return () => {
@@ -187,6 +194,21 @@ export function DocumentPage() {
     sendCursor(el.selectionStart, el.selectionStart, el.selectionEnd)
   }
 
+  const openTitleEdit = () => {
+    setDraftTitle(docTitle)
+    setEditingTitle(true)
+    setTimeout(() => titleInputRef.current?.select(), 0)
+  }
+
+  const commitTitleEdit = async () => {
+    setEditingTitle(false)
+    const t = (titleInputRef.current?.value ?? draftTitle).trim()
+    if (t && t !== docTitle && docId) {
+      const updated = await renameDoc({ id: docId, title: t }).unwrap()
+      setDocTitle(updated.title)
+    }
+  }
+
   const shortId = docId ? docId.slice(0, 8) + '…' : ''
 
   return (
@@ -196,26 +218,33 @@ export function DocumentPage() {
           ← Back
         </button>
 
-        <span className="doc-toolbar-title">{docTitle || shortId}</span>
+        {editingTitle ? (
+          <input
+            ref={titleInputRef}
+            className="doc-toolbar-title-input"
+            value={draftTitle}
+            autoFocus
+            onChange={e => setDraftTitle(e.target.value)}
+            onBlur={commitTitleEdit}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { e.currentTarget.blur() }
+              if (e.key === 'Escape') { setEditingTitle(false); setDraftTitle(docTitle) }
+            }}
+          />
+        ) : (
+          <span
+            className="doc-toolbar-title"
+            title="Click to rename"
+            onClick={openTitleEdit}
+            style={{ cursor: 'text' }}
+          >
+            {docTitle || shortId}
+          </span>
+        )}
 
         <div className="toolbar-right">
           <PresenceBar roster={roster} />
-
           <span className="toolbar-username">{display}</span>
-
-          {connStatus !== 'connected' ? (
-            <button
-              className="btn-primary"
-              onClick={connect}
-              disabled={connStatus === 'connecting'}
-            >
-              {connStatus === 'connecting' ? 'Connecting…' : 'Connect'}
-            </button>
-          ) : (
-            <button className="btn-danger" onClick={disconnect}>
-              Leave
-            </button>
-          )}
         </div>
       </header>
 

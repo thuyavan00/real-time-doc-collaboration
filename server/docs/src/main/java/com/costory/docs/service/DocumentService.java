@@ -37,14 +37,30 @@ public class DocumentService {
     public List<DocumentResponse> list() {
         return docRepo.findAllByOrderByUpdatedAtDesc()
             .stream()
-            .map(doc -> new DocumentResponse(doc.getId(), doc.getTitle(), doc.getVersion(), null, doc.getUpdatedAt()))
+            .map(doc -> new DocumentResponse(doc.getId(), doc.getTitle(), doc.getVersion(), null, doc.getUpdatedAt(), doc.getCreatedAt()))
             .toList();
+    }
+
+    @Transactional
+    public DocumentResponse rename(UUID id, String title) {
+        var doc = docRepo.findById(id).orElseThrow();
+        doc.setTitle(title == null || title.isBlank() ? "Untitled" : title.trim());
+        doc.setUpdatedAt(Instant.now());
+        docRepo.save(doc);
+        return new DocumentResponse(doc.getId(), doc.getTitle(), doc.getVersion(), null, doc.getUpdatedAt(), doc.getCreatedAt());
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        var doc = docRepo.findById(id).orElseThrow();
+        opRepo.deleteByDoc(doc);
+        docRepo.delete(doc);
     }
 
     @Transactional(readOnly = true)
     public DocumentResponse get(UUID id) {
         var doc = docRepo.findById(id).orElseThrow();
-        return new DocumentResponse(doc.getId(), doc.getTitle(), doc.getVersion(), doc.getContentSnapshot(), doc.getUpdatedAt());
+        return new DocumentResponse(doc.getId(), doc.getTitle(), doc.getVersion(), doc.getContentSnapshot(), doc.getUpdatedAt(), doc.getCreatedAt());
     }
 
     /** Accept an op, transform if needed, apply, persist, and return broadcast payload. */

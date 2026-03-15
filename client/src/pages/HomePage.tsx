@@ -1,33 +1,39 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, type DocSummary } from '../lib/api'
-import { logout } from '../lib/auth'
+import {
+  useListDocsQuery,
+  useCreateDocMutation,
+  useRenameDocMutation,
+  useDeleteDocMutation,
+  useLogoutMutation,
+} from '../store/api'
 import { useAuth } from '../main'
 import { DocCard } from '../components/DocCard'
 
 export function HomePage() {
   const navigate = useNavigate()
-  const { user, setUser } = useAuth()
-  const [docs, setDocs] = useState<DocSummary[]>([])
-  const [loading, setLoading] = useState(true)
-  const [creating, setCreating] = useState(false)
+  const { user } = useAuth()
 
-  useEffect(() => {
-    api.listDocs().then(d => {
-      setDocs(d)
-      setLoading(false)
-    })
-  }, [])
+  const { data: docs = [], isLoading } = useListDocsQuery()
+  const [createDoc, { isLoading: creating }] = useCreateDocMutation()
+  const [renameDoc] = useRenameDocMutation()
+  const [deleteDoc] = useDeleteDocMutation()
+  const [logout] = useLogoutMutation()
 
   const handleNewDoc = async () => {
-    setCreating(true)
-    const doc = await api.createDoc('Untitled')
+    const doc = await createDoc('Untitled').unwrap()
     navigate(`/doc/${doc.id}`)
+  }
+
+  const handleRename = async (id: string, title: string) => {
+    await renameDoc({ id, title })
+  }
+
+  const handleDelete = async (id: string) => {
+    await deleteDoc(id)
   }
 
   const handleLogout = async () => {
     await logout()
-    setUser(null)
     navigate('/auth')
   }
 
@@ -53,7 +59,7 @@ export function HomePage() {
           </button>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="doc-grid">
             {[1, 2, 3].map(i => (
               <div key={i} className="doc-card doc-card-skeleton" />
@@ -64,11 +70,29 @@ export function HomePage() {
             <p>No documents yet. Create one to get started.</p>
           </div>
         ) : (
-          <div className="doc-grid">
-            {docs.map(doc => (
-              <DocCard key={doc.id} doc={doc} />
-            ))}
-          </div>
+          <>
+            <section className="doc-section">
+              <h2 className="doc-section-heading">Recent</h2>
+              <div className="doc-grid">
+                {docs.slice(0, 4).map(doc => (
+                  <DocCard key={doc.id} doc={doc} onRename={handleRename} onDelete={handleDelete} />
+                ))}
+              </div>
+            </section>
+
+            {docs.length > 0 && (
+              <section className="doc-section">
+                <h2 className="doc-section-heading">All Documents</h2>
+                <div className="doc-grid">
+                  {[...docs]
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .map(doc => (
+                      <DocCard key={doc.id} doc={doc} onRename={handleRename} onDelete={handleDelete} />
+                    ))}
+                </div>
+              </section>
+            )}
+          </>
         )}
       </main>
     </div>
